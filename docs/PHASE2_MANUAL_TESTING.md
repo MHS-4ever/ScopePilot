@@ -175,3 +175,46 @@ Invoke-RestMethod -Method Get -Uri "http://localhost:8000/api/v1/briefs/$briefCI
 ```
 
 Confirm that `claim_token` is not present in the output and `status` is `"draft"`.
+<<<<<<< HEAD
+
+---
+
+## 6. Live Gemini Verification Findings & Regression Corrections
+
+### Live Demonstration Outcomes:
+1. **Reading Game (Clear Request)**:
+   - 2 distinct requirements extracted (`R1`: progress bar, `R2`: mobile audio bug).
+   - 2 clarification questions and 2 blocked tasks generated.
+   - `scope_assessment.status`: `"unknown"` (as `original_scope` was `null`).
+   - No deadline invented.
+
+2. **Learning Platform (Vague Feedback)**:
+   - Preserved subjective feedback uncertainty.
+   - Generated clarifying questions on UI/UX preferences.
+   - Avoided fabricating imaginary tasks or arbitrary design commitments.
+
+3. **Quiz Application (Scope Change)**:
+   - Identified multiplayer and real-time leaderboards.
+   - Successfully flagged `scope_assessment.status`: `"potential_change"` against the single-player baseline scope.
+
+### Manual Verification Defect & Fixes Applied:
+- **Extractor Input Mapping**: Corrected `Extract Requirements` text expression to use:
+  ```javascript
+  {{ JSON.stringify({
+    project_name: $('Claim Brief Analysis').first().json.body.brief.project_name,
+    message: $('Claim Brief Analysis').first().json.body.brief.message,
+    original_scope: $('Claim Brief Analysis').first().json.body.brief.original_scope
+  }) }}
+  ```
+- **Model Metadata Alignment**: Synchronized `Validate and Save Analysis` to record `model_id: "gemini-3.5-flash-lite"`, exactly matching the configured `ScopePilot Gemini Model` node (`gemini-3.5-flash-lite`).
+  > [!NOTE]
+  > In n8n 2.47.3 UI, the model selector may show an "unsupported-value" badge for `gemini-3.5-flash-lite` because it is newer than the static dropdown list in the pinned image. It functions as expected at runtime against Google Gemini API.
+- **Cached Draft Response**: Added `Get Existing Draft` (`GET /api/v1/briefs/{brief_id}/analysis`) on the `already_completed` branch so cached responses return the identical `AnalysisReadResponse` contract as new completions without invoking Gemini.
+- **Clarification Questions Schema & Prompt Hardening (Library Application Bug)**:
+  - In a test with the brief `"Please add a search box to the library page and fix the broken login button."`, Gemini initially produced nested objects for clarification questions: `[{"clarification_question": "..."}]` instead of plain strings `["..."]`. This caused n8n's parser to throw `OUTPUT_PARSING_FAILURE`.
+  - When an ungrounded correction prompt was attempted without original message context, an empty extraction was generated falsely stating no brief was supplied.
+  - **Resolution**:
+    1. Hardened `prompts/brief-extraction-v1.md` and `schemas/analysis-output.schema.json` with strict rules and positive/negative few-shot examples explicitly forbidding nested objects in `clarification_questions`.
+    2. Implemented an automated quality safeguard in FastAPI (`src/scopepilot/analysis_schemas.py`) that rejects empty requirements on actionable briefs with `422 Unprocessable Entity`, transitioning the brief to `failed` (`invalid_model_output`) rather than persisting corrupt drafts.
+=======
+>>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69

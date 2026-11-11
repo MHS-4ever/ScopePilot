@@ -145,9 +145,70 @@ class AnalysisResult(BaseModel):
                     "Scope assessment status must be 'unknown' when original_scope is not provided"
                 )
 
+<<<<<<< HEAD
+            # Quality safeguard for suspiciously empty extraction
+            if message is not None and len(self.requirements) == 0:
+                cleaned_msg = message.strip()
+                reason_lower = (self.scope_assessment.reason or "").lower()
+                questions_lower = " ".join(self.clarification_questions).lower()
+                claims_missing = any(
+                    phrase in reason_lower or phrase in questions_lower
+                    for phrase in MISSING_BRIEF_PHRASES
+                )
+                if claims_missing and cleaned_msg:
+                    raise ValueError(
+                        "Suspiciously empty analysis: Model claimed no brief was supplied, but client message is non-empty."
+                    )
+
+                words = {w.strip(".,!?:;\"'()[]{}").lower() for w in cleaned_msg.split()}
+                matched_indicators = words.intersection(ACTIONABLE_REQUEST_INDICATORS)
+                if matched_indicators and len(cleaned_msg) >= 15:
+                    raise ValueError(
+                        f"Suspiciously empty analysis: Client message contains actionable request indicators "
+                        f"({', '.join(sorted(matched_indicators))}) but requirements list is empty."
+                    )
+
         return self
 
 
+ACTIONABLE_REQUEST_INDICATORS = frozenset({
+    "add",
+    "fix",
+    "create",
+    "implement",
+    "update",
+    "build",
+    "rebuild",
+    "remove",
+    "change",
+    "modify",
+    "bug",
+    "broken",
+    "issue",
+    "error",
+    "preserve",
+    "repair",
+    "replace",
+    "support",
+    "enable",
+})
+
+MISSING_BRIEF_PHRASES = (
+    "no client brief",
+    "no brief supplied",
+    "no brief was supplied",
+    "no brief provided",
+    "no message provided",
+    "no text provided",
+    "empty brief",
+)
+
+
+=======
+        return self
+
+
+>>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 def validate_analysis_against_brief(
     result: AnalysisResult, message: str, original_scope: str | None
 ) -> None:
@@ -170,6 +231,34 @@ def validate_analysis_against_brief(
             "Scope assessment status must be 'unknown' when original_scope is not provided"
         )
 
+<<<<<<< HEAD
+    # Lightweight Quality Safeguard for Suspiciously Empty Extractions
+    if len(result.requirements) == 0:
+        cleaned_msg = message.strip()
+
+        # 1. Check if model falsely claimed no input/brief was supplied
+        reason_lower = (result.scope_assessment.reason or "").lower()
+        questions_lower = " ".join(result.clarification_questions).lower()
+        claims_missing = any(
+            phrase in reason_lower or phrase in questions_lower
+            for phrase in MISSING_BRIEF_PHRASES
+        )
+        if claims_missing and cleaned_msg:
+            raise ValueError(
+                "Suspiciously empty analysis: Model claimed no brief was supplied, but client message is non-empty."
+            )
+
+        # 2. Check if client message contains unmistakable actionable indicators
+        words = {w.strip(".,!?:;\"'()[]{}").lower() for w in cleaned_msg.split()}
+        matched_indicators = words.intersection(ACTIONABLE_REQUEST_INDICATORS)
+        if matched_indicators and len(cleaned_msg) >= 15:
+            raise ValueError(
+                f"Suspiciously empty analysis: Client message contains actionable request indicators "
+                f"({', '.join(sorted(matched_indicators))}) but requirements list is empty."
+            )
+
+=======
+>>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 
 # API Schemas
 

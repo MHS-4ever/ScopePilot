@@ -189,3 +189,76 @@ def test_11_empty_requirements_cannot_produce_tasks():
     with pytest.raises(ValidationError) as exc:
         AnalysisResult.model_validate(data)
     assert "Proposed tasks cannot be created when requirements is empty" in str(exc.value)
+<<<<<<< HEAD
+
+
+def test_clarification_questions_rejects_nested_objects():
+    data = sample_valid_data()
+    data["clarification_questions"] = [{"clarification_question": "Where should the progress bar appear?"}]
+    with pytest.raises(ValidationError):
+        AnalysisResult.model_validate(data)
+
+
+def test_suspicious_empty_extraction_is_rejected_on_actionable_brief():
+    # Library application failure reproduction
+    msg = "Please add a search box to the library page and fix the broken login button."
+    data = {
+        "requirements": [],
+        "clarification_questions": ["What search features are desired?"],
+        "proposed_tasks": [],
+        "scope_assessment": {
+            "status": "unknown",
+            "reason": "Initial review",
+            "related_requirement_ids": [],
+        },
+        "deadline_quote": None,
+    }
+    with pytest.raises(ValidationError) as exc:
+        AnalysisResult.model_validate(data, context={"message": msg, "original_scope": None})
+    assert "Suspiciously empty analysis" in str(exc.value)
+
+    res = AnalysisResult.model_validate(data)
+    with pytest.raises(ValueError) as exc2:
+        validate_analysis_against_brief(res, msg, None)
+    assert "Suspiciously empty analysis" in str(exc2.value)
+
+
+def test_suspicious_empty_extraction_claiming_no_brief_is_rejected():
+    msg = "Here is some context about our system."
+    data = {
+        "requirements": [],
+        "clarification_questions": ["Please provide the client brief."],
+        "proposed_tasks": [],
+        "scope_assessment": {
+            "status": "unknown",
+            "reason": "No client brief was supplied to extract from.",
+            "related_requirement_ids": [],
+        },
+        "deadline_quote": None,
+    }
+    with pytest.raises(ValidationError) as exc:
+        AnalysisResult.model_validate(data, context={"message": msg, "original_scope": None})
+    assert "Model claimed no brief was supplied" in str(exc.value)
+
+
+def test_legitimate_empty_extraction_is_accepted_on_non_actionable_message():
+    msg = "Hello, hope you are having a nice day. Thanks for connecting."
+    data = {
+        "requirements": [],
+        "clarification_questions": ["How can we assist you with your project?"],
+        "proposed_tasks": [],
+        "scope_assessment": {
+            "status": "unknown",
+            "reason": "No actionable requirements identified in greeting message.",
+            "related_requirement_ids": [],
+        },
+        "deadline_quote": None,
+    }
+    res = AnalysisResult.model_validate(data, context={"message": msg, "original_scope": None})
+    validate_analysis_against_brief(res, msg, None)
+    assert len(res.requirements) == 0
+    assert len(res.proposed_tasks) == 0
+
+
+=======
+>>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69

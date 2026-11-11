@@ -385,6 +385,51 @@ def test_22_invalid_model_output_never_creates_a_draft(
     assert read_resp.json()["status"] == "processing"
 
 
+<<<<<<< HEAD
+def test_suspiciously_empty_output_rejected_by_api(
+    client: TestClient, auth_headers: dict[str, str], test_brief: dict
+):
+    brief_id = test_brief["id"]
+    claim = client.post(
+        f"/api/v1/briefs/{brief_id}/analysis/claim",
+        headers=auth_headers,
+        json={},
+    ).json()
+
+    empty_analysis = {
+        "requirements": [],
+        "clarification_questions": ["What would you like to build?"],
+        "proposed_tasks": [],
+        "scope_assessment": {
+            "status": "unknown",
+            "reason": "No requirements found.",
+            "related_requirement_ids": [],
+        },
+        "deadline_quote": None,
+    }
+
+    payload = {
+        "claim_token": claim["claim_token"],
+        "model_id": "gemini-3.5-flash-lite",
+        "prompt_version": "brief-extraction-v1",
+        "schema_version": "1",
+        "result": empty_analysis,
+    }
+    resp = client.post(
+        f"/api/v1/briefs/{brief_id}/analysis/complete",
+        headers=auth_headers,
+        json=payload,
+    )
+    assert resp.status_code == 422
+    assert "Suspiciously empty analysis" in resp.json()["detail"]
+
+    # Verify no draft was created
+    read = client.get(f"/api/v1/briefs/{brief_id}/analysis", headers=auth_headers)
+    assert read.json()["status"] == "processing"
+
+
+=======
+>>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 def test_23_duplicate_completion_cannot_overwrite_draft(
     client: TestClient, auth_headers: dict[str, str], test_brief: dict
 ):

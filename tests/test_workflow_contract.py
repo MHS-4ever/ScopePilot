@@ -114,3 +114,133 @@ def test_44_workflow_contains_no_github_issue_creation_operation():
     for node in data["nodes"]:
         assert "github" not in node["type"].lower()
         assert "issue" not in node.get("name", "").lower()
+<<<<<<< HEAD
+
+
+def test_45_extractor_references_claimed_brief_correctly():
+    with open(WORKFLOW_PATH, "r", encoding="utf-8") as f:
+        workflow_data = json.load(f)
+
+    nodes_by_name = {node["name"]: node for node in workflow_data["nodes"]}
+    extractor = nodes_by_name["Extract Requirements"]
+    text_param = extractor["parameters"]["text"]
+
+    # Verify extractor references Claim Brief Analysis full response structure
+    assert "$('Claim Brief Analysis')" in text_param
+    assert "body.brief.message" in text_param
+    assert "body.brief.project_name" in text_param
+    assert "body.brief.original_scope" in text_param
+    assert ".first().json.body.brief" in text_param
+    assert "JSON.stringify" in text_param
+
+
+def test_46_cached_requests_route_to_authenticated_read_endpoint():
+    with open(WORKFLOW_PATH, "r", encoding="utf-8") as f:
+        workflow_data = json.load(f)
+
+    nodes_by_name = {node["name"]: node for node in workflow_data["nodes"]}
+    assert "Get Existing Draft" in nodes_by_name
+    get_draft_node = nodes_by_name["Get Existing Draft"]
+
+    # Verify HTTP GET to read endpoint
+    assert get_draft_node["type"] == "n8n-nodes-base.httpRequest"
+    assert get_draft_node["parameters"]["method"] == "GET"
+    assert "/analysis" in get_draft_node["parameters"]["url"]
+    assert "$('Claim Brief Analysis').first().json.body.brief.id" in get_draft_node["parameters"]["url"]
+
+    # Verify authenticated with Backend API Key credential
+    creds = get_draft_node["credentials"]["httpHeaderAuth"]
+    assert creds["name"] == "ScopePilot Backend API Key"
+
+    # Verify connection from Check If Completed -> Get Existing Draft -> Return Existing Result
+    completed_conns = workflow_data["connections"]["Check If Completed"]["main"]
+    assert completed_conns[0][0]["node"] == "Get Existing Draft"
+
+    get_draft_conns = workflow_data["connections"]["Get Existing Draft"]["main"]
+    assert get_draft_conns[0][0]["node"] == "Return Existing Result"
+
+
+def test_47_cached_requests_do_not_invoke_gemini():
+    with open(WORKFLOW_PATH, "r", encoding="utf-8") as f:
+        workflow_data = json.load(f)
+
+    # Trace all nodes reachable from Check If Completed branch 0
+    visited = set()
+    queue = ["Get Existing Draft"]
+    while queue:
+        current = queue.pop(0)
+        visited.add(current)
+        for target_list in workflow_data["connections"].get(current, {}).get("main", []):
+            for conn in target_list:
+                node_name = conn["node"]
+                if node_name not in visited:
+                    queue.append(node_name)
+
+    assert "Extract Requirements" not in visited
+    assert "ScopePilot Gemini Model" not in visited
+
+
+def test_48_cached_and_newly_completed_responses_have_consistent_structures():
+    from scopepilot.analysis_schemas import AnalysisReadResponse
+
+    with open(WORKFLOW_PATH, "r", encoding="utf-8") as f:
+        workflow_data = json.load(f)
+
+    nodes_by_name = {node["name"]: node for node in workflow_data["nodes"]}
+    existing_resp_node = nodes_by_name["Return Existing Result"]
+    new_resp_node = nodes_by_name["Return Analysis Result"]
+
+    # Both return responseBody pointing to the upstream response body
+    assert "$json.body" in existing_resp_node["parameters"]["responseBody"]
+    assert "$json.body" in new_resp_node["parameters"]["responseBody"]
+
+    # Both endpoints (GET /analysis and POST /analysis/complete) produce AnalysisReadResponse
+    read_fields = set(AnalysisReadResponse.model_fields.keys())
+    expected_fields = {
+        "analysis_id",
+        "brief_id",
+        "status",
+        "attempt_count",
+        "model_id",
+        "prompt_version",
+        "schema_version",
+        "completed_at",
+        "result",
+        "last_error_code",
+    }
+    assert read_fields == expected_fields
+
+
+def test_49_model_id_metadata_matches_configured_gemini_model():
+    with open(WORKFLOW_PATH, "r", encoding="utf-8") as f:
+        workflow_data = json.load(f)
+
+    nodes_by_name = {node["name"]: node for node in workflow_data["nodes"]}
+    gemini_node = nodes_by_name["ScopePilot Gemini Model"]
+    save_node = nodes_by_name["Validate and Save Analysis"]
+
+    gemini_model = gemini_node["parameters"]["modelName"]
+    save_body = save_node["parameters"]["body"]
+
+    # Ensure model_id recorded matches the Gemini modelName parameter exactly
+    assert f"model_id: '{gemini_model}'" in save_body or f'model_id: "{gemini_model}"' in save_body
+    assert gemini_model == "gemini-3.5-flash-lite"
+
+
+def test_50_prompt_embedded_in_n8n_matches_canonical_prompt():
+    prompt_path = REPO_ROOT / "prompts" / "brief-extraction-v1.md"
+    with open(prompt_path, "r", encoding="utf-8") as f:
+        canonical_prompt = f.read()
+
+    with open(WORKFLOW_PATH, "r", encoding="utf-8") as f:
+        workflow_data = json.load(f)
+
+    nodes_by_name = {node["name"]: node for node in workflow_data["nodes"]}
+    extractor = nodes_by_name["Extract Requirements"]
+    embedded_prompt = extractor["parameters"]["options"]["systemPromptTemplate"]
+
+    assert embedded_prompt == canonical_prompt
+
+
+=======
+>>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
