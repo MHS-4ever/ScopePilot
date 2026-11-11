@@ -6,12 +6,26 @@ from contextlib import asynccontextmanager
 from datetime import datetime, timezone
 from uuid import UUID, uuid4
 
-from fastapi import Depends, FastAPI, HTTPException, Security, status
+from fastapi import Depends, FastAPI, HTTPException, Response, Security, status
 from fastapi.security import APIKeyHeader
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
 
+from scopepilot.analysis_schemas import (
+    AnalysisClaimRequest,
+    AnalysisClaimResponse,
+    AnalysisCompleteRequest,
+    AnalysisFailRequest,
+    AnalysisFailResponse,
+    AnalysisReadResponse,
+)
+from scopepilot.analysis_service import (
+    claim_analysis,
+    complete_analysis,
+    fail_analysis,
+    get_analysis,
+)
 from scopepilot.config import Settings, get_settings
 from scopepilot.database import (
     Base,
@@ -126,6 +140,58 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         if brief is None:
             raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail="Brief not found")
         return brief_response(brief)
+
+    @app.post(
+        "/api/v1/briefs/{brief_id}/analysis/claim",
+        response_model=AnalysisClaimResponse,
+        dependencies=[Depends(require_api_key)],
+    )
+    def claim_analysis_endpoint(
+        brief_id: UUID,
+        response: Response,
+        _payload: AnalysisClaimRequest | None = None,
+        session: Session = Depends(get_session),
+    ) -> AnalysisClaimResponse:
+        status_code, claim_resp = claim_analysis(session, brief_id)
+        response.status_code = status_code
+        return claim_resp
+
+    @app.post(
+        "/api/v1/briefs/{brief_id}/analysis/complete",
+        response_model=AnalysisReadResponse,
+        status_code=status.HTTP_200_OK,
+        dependencies=[Depends(require_api_key)],
+    )
+    def complete_analysis_endpoint(
+        brief_id: UUID,
+        payload: AnalysisCompleteRequest,
+        session: Session = Depends(get_session),
+    ) -> AnalysisReadResponse:
+        return complete_analysis(session, brief_id, payload)
+
+    @app.get(
+        "/api/v1/briefs/{brief_id}/analysis",
+        response_model=AnalysisReadResponse,
+        dependencies=[Depends(require_api_key)],
+    )
+    def get_analysis_endpoint(
+        brief_id: UUID,
+        session: Session = Depends(get_session),
+    ) -> AnalysisReadResponse:
+        return get_analysis(session, brief_id)
+
+    @app.post(
+        "/api/v1/briefs/{brief_id}/analysis/fail",
+        response_model=AnalysisFailResponse,
+        status_code=status.HTTP_200_OK,
+        dependencies=[Depends(require_api_key)],
+    )
+    def fail_analysis_endpoint(
+        brief_id: UUID,
+        payload: AnalysisFailRequest,
+        session: Session = Depends(get_session),
+    ) -> AnalysisFailResponse:
+        return fail_analysis(session, brief_id, payload)
 
     app.state.engine = engine
     app.state.session_factory = session_factory

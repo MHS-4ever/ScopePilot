@@ -24,6 +24,7 @@ def create_database_engine(database_url: str) -> Engine:
         cursor = connection.cursor()
         cursor.execute("PRAGMA journal_mode=WAL")
         cursor.execute("PRAGMA busy_timeout=30000")
+        cursor.execute("PRAGMA foreign_keys=ON")
         cursor.close()
 
     return engine
