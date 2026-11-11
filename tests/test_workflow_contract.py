@@ -114,7 +114,6 @@ def test_44_workflow_contains_no_github_issue_creation_operation():
     for node in data["nodes"]:
         assert "github" not in node["type"].lower()
         assert "issue" not in node.get("name", "").lower()
-<<<<<<< HEAD
 
 
 def test_45_extractor_references_claimed_brief_correctly():
@@ -240,7 +239,3 @@ def test_50_prompt_embedded_in_n8n_matches_canonical_prompt():
     embedded_prompt = extractor["parameters"]["options"]["systemPromptTemplate"]
 
     assert embedded_prompt == canonical_prompt
-
-
-=======
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69

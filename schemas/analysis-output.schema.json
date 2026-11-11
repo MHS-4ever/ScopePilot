@@ -57,10 +57,7 @@
     },
     "clarification_questions": {
       "type": "array",
-<<<<<<< HEAD
       "description": "An array of plain strings. Must NOT contain objects or key-value pairs.",
-=======
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
       "maxItems": 20,
       "items": {
         "type": "string",

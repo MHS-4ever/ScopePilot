@@ -8,7 +8,6 @@ The pipeline is triggered via an authenticated webhook, claims the brief atomica
 
 ```text
 Existing Brief in SQLite
-<<<<<<< HEAD
     │
     ▼
 Authenticated Analysis Webhook (n8n: POST /webhook/scopepilot/analyze)
@@ -34,32 +33,6 @@ FastAPI Atomic Analysis Claim (POST /api/v1/briefs/{brief_id}/analysis/claim)
                                               │
                                               ▼
                                       Return Draft Analysis Result to Webhook Caller
-=======
-    |
-    v
-Authenticated Analysis Webhook (n8n: POST /webhook/scopepilot/analyze)
-    |
-    v
-FastAPI Atomic Analysis Claim (POST /api/v1/briefs/{brief_id}/analysis/claim)
-    |
-    v
-Retrieve Stored Brief Content (FastAPI -> n8n)
-    |
-    v
-n8n Information Extractor (JSON Schema + System Prompt)
-    |
-    v
-Google Gemini Chat Model (gemini-3.5-flash-lite, Temp: 0)
-    |
-    v
-FastAPI Pydantic & Source-Evidence Validation (POST /api/v1/briefs/{brief_id}/analysis/complete)
-    |
-    v
-Persist Validated Analysis in SQLite (status: draft)
-    |
-    v
-Return Draft Analysis Result to Webhook Caller
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 ```
 
 ---
@@ -137,16 +110,11 @@ Phase 2 adds exactly one new table (`brief_analyses`) to the SQLite database wit
 The output structure strictly adheres to `schemas/analysis-output.schema.json` and `scopepilot.analysis_schemas.AnalysisResult`:
 
 1. **`requirements`**: List of up to 20 requirements with sequential IDs (`R1`, `R2`, ...). Each `source_quote` must exist as an exact continuous substring in the client message.
-<<<<<<< HEAD
 2. **`clarification_questions`**: Array of up to 20 unique clarifying questions (max 300 characters each). Must be an array of plain strings (objects strictly forbidden).
-=======
-2. **`clarification_questions`**: Array of up to 20 unique clarifying questions (max 300 characters each).
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 3. **`proposed_tasks`**: Up to 20 actionable tasks referencing existing requirement IDs. If `requirements` is empty, `proposed_tasks` must be empty.
 4. **`scope_assessment`**: Compares requested work against `original_scope`. If `original_scope` is null/empty, status MUST be `unknown`.
 5. **`deadline_quote`**: Either `null` or an exact continuous substring of the client message. No calendar dates are invented.
 
-<<<<<<< HEAD
 ### Quality Safeguard on Empty Extractions
 
 FastAPI implements a semantic validation check against corrupt or ungrounded model outputs:
@@ -154,9 +122,6 @@ FastAPI implements a semantic validation check against corrupt or ungrounded mod
 - If the brief is actionable (and >= 15 characters), or if the model's questions/reasoning falsely claim "no client brief was supplied", the analysis is rejected with `422 Unprocessable Entity`.
 - This ensures n8n routes to `Record Extraction Failure` (`invalid_model_output`) rather than saving an ungrounded empty draft.
 - Genuine empty briefs (e.g. conversational greetings with no actionable requests) continue to be accepted legitimately.
-
-=======
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 ---
 
 ## Security Model

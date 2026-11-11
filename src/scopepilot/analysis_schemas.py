@@ -145,7 +145,6 @@ class AnalysisResult(BaseModel):
                     "Scope assessment status must be 'unknown' when original_scope is not provided"
                 )
 
-<<<<<<< HEAD
             # Quality safeguard for suspiciously empty extraction
             if message is not None and len(self.requirements) == 0:
                 cleaned_msg = message.strip()
@@ -202,13 +201,6 @@ MISSING_BRIEF_PHRASES = (
     "no text provided",
     "empty brief",
 )
-
-
-=======
-        return self
-
-
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 def validate_analysis_against_brief(
     result: AnalysisResult, message: str, original_scope: str | None
 ) -> None:
@@ -231,7 +223,6 @@ def validate_analysis_against_brief(
             "Scope assessment status must be 'unknown' when original_scope is not provided"
         )
 
-<<<<<<< HEAD
     # Lightweight Quality Safeguard for Suspiciously Empty Extractions
     if len(result.requirements) == 0:
         cleaned_msg = message.strip()
@@ -257,8 +248,6 @@ def validate_analysis_against_brief(
                 f"({', '.join(sorted(matched_indicators))}) but requirements list is empty."
             )
 
-=======
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 
 # API Schemas
 

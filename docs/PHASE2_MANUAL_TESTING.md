@@ -175,7 +175,6 @@ Invoke-RestMethod -Method Get -Uri "http://localhost:8000/api/v1/briefs/$briefCI
 ```
 
 Confirm that `claim_token` is not present in the output and `status` is `"draft"`.
-<<<<<<< HEAD
 
 ---
 
@@ -216,5 +215,3 @@ Confirm that `claim_token` is not present in the output and `status` is `"draft"
   - **Resolution**:
     1. Hardened `prompts/brief-extraction-v1.md` and `schemas/analysis-output.schema.json` with strict rules and positive/negative few-shot examples explicitly forbidding nested objects in `clarification_questions`.
     2. Implemented an automated quality safeguard in FastAPI (`src/scopepilot/analysis_schemas.py`) that rejects empty requirements on actionable briefs with `422 Unprocessable Entity`, transitioning the brief to `failed` (`invalid_model_output`) rather than persisting corrupt drafts.
-=======
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69

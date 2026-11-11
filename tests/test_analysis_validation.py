@@ -189,7 +189,6 @@ def test_11_empty_requirements_cannot_produce_tasks():
     with pytest.raises(ValidationError) as exc:
         AnalysisResult.model_validate(data)
     assert "Proposed tasks cannot be created when requirements is empty" in str(exc.value)
-<<<<<<< HEAD
 
 
 def test_clarification_questions_rejects_nested_objects():
@@ -258,7 +257,3 @@ def test_legitimate_empty_extraction_is_accepted_on_non_actionable_message():
     validate_analysis_against_brief(res, msg, None)
     assert len(res.requirements) == 0
     assert len(res.proposed_tasks) == 0
-
-
-=======
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69

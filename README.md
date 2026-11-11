@@ -255,16 +255,12 @@ All Phase 2 endpoints require `X-API-Key: <SCOPEPILOT_API_KEY>`:
 
 - **Canonical JSON Schema**: `schemas/analysis-output.schema.json`
 - **Versioned Extraction Prompt**: `prompts/brief-extraction-v1.md`
-<<<<<<< HEAD
 - **Model Selection & Synchronization**: `gemini-3.5-flash-lite` (configured with temperature 0, no external tools, no search grounding). The `model_id` passed in `Validate and Save Analysis` matches this exact string.
   > [!NOTE]
   > In n8n 2.47.3, the model dropdown may display an "unsupported-value" badge for `gemini-3.5-flash-lite` because the model identifier was introduced upstream after n8n 2.47.3 was tagged. It is fully supported and operational at runtime via Google Gemini API.
 - **Extraction Reliability & Quality Safeguard**:
   - The extraction prompt and canonical schema explicitly enforce `clarification_questions` as a flat array of plain strings (strictly forbidding nested objects like `[{"clarification_question": "..."}]`).
   - The FastAPI completion endpoint enforces an automated safeguard against hallucinated empty drafts: if an extraction returns zero requirements on a client message containing clear actionable request indicators (or falsely claims no brief was supplied), the request is rejected with `422 Unprocessable Entity`, allowing n8n to safely record an `invalid_model_output` failure rather than saving a corrupt draft.
-=======
-- **Model Selection**: `gemini-3.5-flash-lite` (or available Gemini model in user's free tier, configured with temperature 0, no external tools, no search grounding).
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 
 ## n8n Analysis Workflow
 
@@ -282,7 +278,6 @@ All Phase 2 endpoints require `X-API-Key: <SCOPEPILOT_API_KEY>`:
    - Google PaLM API / Gemini: `ScopePilot Gemini API`
 3. Activate the workflow.
 
-<<<<<<< HEAD
 ### Live Gemini Verification Findings & Workflow Refinements:
 - **Input Mapping**: Claim response is a full HTTP object. The `Extract Requirements` node accesses brief fields via:
   `{{ JSON.stringify({ project_name: $('Claim Brief Analysis').first().json.body.brief.project_name, message: $('Claim Brief Analysis').first().json.body.brief.message, original_scope: $('Claim Brief Analysis').first().json.body.brief.original_scope }) }}`.
@@ -291,9 +286,6 @@ All Phase 2 endpoints require `X-API-Key: <SCOPEPILOT_API_KEY>`:
   1. *Reading Game*: Extracted 2 distinct requirements, 2 clarification questions, and marked scope as `unknown` with no invented deadline.
   2. *Learning Platform*: Captured subjective feedback as unclear, asked clarifying questions, and avoided fabricating imaginary features.
   3. *Quiz Application*: Identified multiplayer and leaderboards as `potential_change` against the single-player baseline scope.
-
-=======
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 ## Automated Tests
 
 Run all tests via pytest in PowerShell:
@@ -303,11 +295,7 @@ Run all tests via pytest in PowerShell:
 ```
 
 Test counts:
-<<<<<<< HEAD
-- **67 passed, 0 failed** (12 Phase 1 tests + 15 Data Contract & Safeguard tests + 27 State Management & Security tests + 13 Workflow Contract & Regression tests).
-=======
-- **56 passed, 0 failed** (12 Phase 1 tests + 11 Data Contract tests + 27 State Management & Security tests + 6 Workflow tests).
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
+- **67 passed, 0 failed** (12 Phase 1 tests + 15 Data Contract & Safeguard tests + 28 State Management & Security tests + 12 Workflow Contract & Regression tests).
 
 ## Security Considerations
 

@@ -63,6 +63,25 @@ Tasks are proposals, not approved work.
 
 For vague requests, generate clarification questions rather than fabricating detailed tasks.
 
+STRICT OUTPUT FORMAT RULES:
+
+- clarification_questions MUST be an array of plain strings.
+- NEVER return objects inside clarification_questions.
+- Correct example:
+  "clarification_questions": [
+    "Where should the progress bar appear?",
+    "Which browsers have audio problems?"
+  ]
+- Incorrect example:
+  "clarification_questions": [
+    {"clarification_question": "Where should the progress bar appear?"}
+  ]
+- requirements MUST contain one entry for each distinct, clearly stated client request.
+- If the client message contains actionable requests, do not return empty requirements.
+- Only return empty requirements when the message genuinely contains no identifiable request.
+- All proposed_tasks must reference valid requirement IDs.
+- Validate every field against the supplied JSON Schema before responding.
+
 OUTPUT:
 
 Return one structured object matching the provided schema.

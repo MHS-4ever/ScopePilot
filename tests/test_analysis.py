@@ -385,7 +385,6 @@ def test_22_invalid_model_output_never_creates_a_draft(
     assert read_resp.json()["status"] == "processing"
 
 
-<<<<<<< HEAD
 def test_suspiciously_empty_output_rejected_by_api(
     client: TestClient, auth_headers: dict[str, str], test_brief: dict
 ):
@@ -427,9 +426,6 @@ def test_suspiciously_empty_output_rejected_by_api(
     read = client.get(f"/api/v1/briefs/{brief_id}/analysis", headers=auth_headers)
     assert read.json()["status"] == "processing"
 
-
-=======
->>>>>>> 7c20d0b3ab1986a53e8c97b03f47c489bf0a7d69
 def test_23_duplicate_completion_cannot_overwrite_draft(
     client: TestClient, auth_headers: dict[str, str], test_brief: dict
 ):
