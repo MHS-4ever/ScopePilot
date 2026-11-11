@@ -1,0 +1,56 @@
+[
+  {
+    "id": "example-a-clear-request",
+    "project_name": "Reading Game",
+    "message": "Add a progress bar and fix mobile audio.",
+    "original_scope": null,
+    "expected_analysis_notes": {
+      "requirements": [
+        "Progress bar requirement",
+        "Mobile audio bug"
+      ],
+      "clarification_questions": "Ask for missing details on mobile audio devices/formats and progress bar milestones",
+      "scope_assessment": {
+        "status": "unknown",
+        "reason": "original_scope is null"
+      },
+      "deadline_quote": null
+    }
+  },
+  {
+    "id": "example-b-vague-feedback",
+    "project_name": "Learning Platform",
+    "message": "The interface doesn't feel right. Please make it better.",
+    "original_scope": null,
+    "expected_analysis_notes": {
+      "requirements": [
+        "Unclear requirement regarding interface feel (needs_clarification: true)"
+      ],
+      "clarification_questions": "Ask specific clarifying questions about which screens, interactions, and aesthetic changes are desired",
+      "scope_assessment": {
+        "status": "unknown",
+        "reason": "original_scope is null"
+      },
+      "proposed_tasks": [],
+      "deadline_quote": null
+    }
+  },
+  {
+    "id": "example-c-possible-scope-change",
+    "project_name": "Quiz Application",
+    "message": "The quiz works. Please add multiplayer support and real-time leaderboards.",
+    "original_scope": "Build a single-player quiz application with local score tracking.",
+    "expected_analysis_notes": {
+      "requirements": [
+        "Multiplayer support requirement",
+        "Real-time leaderboards requirement"
+      ],
+      "clarification_questions": "Clarify concurrency expectations, multiplayer game modes, and ranking rules",
+      "scope_assessment": {
+        "status": "potential_change",
+        "reason": "Baseline scope is strictly a single-player application with local score tracking; multiplayer and real-time features extend beyond that baseline."
+      },
+      "deadline_quote": null
+    }
+  }
+]
