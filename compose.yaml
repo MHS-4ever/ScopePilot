@@ -1,0 +1,58 @@
+services:
+  api:
+    build:
+      context: .
+    environment:
+      SCOPEPILOT_API_KEY: "${SCOPEPILOT_API_KEY:?Set SCOPEPILOT_API_KEY in .env}"
+      SCOPEPILOT_DATABASE_URL: sqlite:////app/data/scopepilot.db
+    ports:
+      - "127.0.0.1:8000:8000"
+    volumes:
+      - app_data:/app/data
+    healthcheck:
+      test:
+        - CMD
+        - python
+        - -c
+        - "import urllib.request; urllib.request.urlopen('http://127.0.0.1:8000/health', timeout=2)"
+      interval: 10s
+      timeout: 3s
+      retries: 5
+      start_period: 5s
+    restart: unless-stopped
+
+  n8n:
+    image: docker.n8n.io/n8nio/n8n:2.47.3
+    environment:
+      GENERIC_TIMEZONE: Asia/Karachi
+      TZ: Asia/Karachi
+      N8N_ENCRYPTION_KEY: "${N8N_ENCRYPTION_KEY:?Set N8N_ENCRYPTION_KEY in .env}"
+      N8N_ENFORCE_SETTINGS_FILE_PERMISSIONS: "true"
+      N8N_HOST: localhost
+      N8N_PORT: "5678"
+      N8N_PROTOCOL: http
+      WEBHOOK_URL: http://localhost:5678/
+    ports:
+      - "127.0.0.1:5678:5678"
+    volumes:
+      - n8n_data:/home/node/.n8n
+    healthcheck:
+      test:
+        - CMD
+        - wget
+        - --spider
+        - --quiet
+        - http://127.0.0.1:5678/healthz
+      interval: 10s
+      timeout: 3s
+      retries: 10
+      start_period: 20s
+    depends_on:
+      api:
+        condition: service_healthy
+    restart: unless-stopped
+
+volumes:
+  app_data:
+  n8n_data:
+

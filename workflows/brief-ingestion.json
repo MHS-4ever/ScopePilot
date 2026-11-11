@@ -1,0 +1,114 @@
+{
+  "name": "ScopePilot - Brief Ingestion",
+  "nodes": [
+    {
+      "parameters": {
+        "httpMethod": "POST",
+        "path": "scopepilot/briefs",
+        "authentication": "headerAuth",
+        "responseMode": "responseNode",
+        "options": {}
+      },
+      "id": "5ee627b0-d6cb-4d22-a5a2-82df713bc414",
+      "name": "Receive Brief",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2.1,
+      "position": [
+        0,
+        0
+      ],
+      "webhookId": "78f1f94c-28a9-43e9-b9d8-ad685e86ad53",
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "ScopePilot Webhook Header Auth"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "method": "POST",
+        "url": "http://api:8000/api/v1/briefs",
+        "authentication": "genericCredentialType",
+        "genericAuthType": "httpHeaderAuth",
+        "sendBody": true,
+        "contentType": "raw",
+        "rawContentType": "application/json",
+        "body": "={{ JSON.stringify($json.body) }}",
+        "options": {
+          "response": {
+            "response": {
+              "fullResponse": true,
+              "neverError": true,
+              "responseFormat": "json"
+            }
+          }
+        }
+      },
+      "id": "12664b4e-8da5-4997-99b8-173c2b14020c",
+      "name": "Send to ScopePilot API",
+      "type": "n8n-nodes-base.httpRequest",
+      "typeVersion": 4.2,
+      "position": [
+        240,
+        0
+      ],
+      "credentials": {
+        "httpHeaderAuth": {
+          "name": "ScopePilot Backend API Key"
+        }
+      }
+    },
+    {
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json.body }}",
+        "options": {
+          "responseCode": "={{ $json.statusCode }}"
+        }
+      },
+      "id": "cd01f338-57bb-481a-85d1-554544c6e9d2",
+      "name": "Return API Result",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.4,
+      "position": [
+        480,
+        0
+      ]
+    }
+  ],
+  "pinData": {},
+  "connections": {
+    "Receive Brief": {
+      "main": [
+        [
+          {
+            "node": "Send to ScopePilot API",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    },
+    "Send to ScopePilot API": {
+      "main": [
+        [
+          {
+            "node": "Return API Result",
+            "type": "main",
+            "index": 0
+          }
+        ]
+      ]
+    }
+  },
+  "active": false,
+  "settings": {
+    "executionOrder": "v1"
+  },
+  "versionId": "a2a559c0-dde7-458a-87f0-66dcbf93059c",
+  "meta": {
+    "templateCredsSetupCompleted": false
+  },
+  "tags": []
+}
+

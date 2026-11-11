@@ -1,0 +1,2 @@
+"""ScopePilot brief ingestion service."""
+
