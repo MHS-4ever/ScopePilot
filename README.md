@@ -40,14 +40,15 @@ From the repository directory:
 Copy-Item .env.example .env
 ```
 
-Replace both placeholder values in `.env`. Generate independent secrets, for example:
+Replace all three placeholder values in `.env`. Generate independent secrets, for example:
 
 ```powershell
 python -c "import secrets; print(secrets.token_urlsafe(32))"
 python -c "import secrets; print(secrets.token_urlsafe(32))"
+python -c "import secrets; print(secrets.token_urlsafe(32))"
 ```
 
-Set the first result as `SCOPEPILOT_API_KEY` and the second as `N8N_ENCRYPTION_KEY`, then start the stack:
+Set the results as `SCOPEPILOT_API_KEY`, `SCOPEPILOT_REVIEW_KEY`, and `N8N_ENCRYPTION_KEY`, respectively, then start the stack:
 
 ```powershell
 docker compose config
@@ -286,6 +287,44 @@ All Phase 2 endpoints require `X-API-Key: <SCOPEPILOT_API_KEY>`:
   1. *Reading Game*: Extracted 2 distinct requirements, 2 clarification questions, and marked scope as `unknown` with no invented deadline.
   2. *Learning Platform*: Captured subjective feedback as unclear, asked clarifying questions, and avoided fabricating imaginary features.
   3. *Quiz Application*: Identified multiplayer and leaderboards as `potential_change` against the single-player baseline scope.
+
+## Phase 3A: Human Review Backend
+
+Phase 3A adds an operator-only review API for completed Phase 2 drafts. It creates independent editable task copies while keeping `brief_analyses.result_json` immutable. Review decisions use a separate `X-Review-Key`, clarification-blocked tasks require explicit resolution before approval, and global plus per-task revisions prevent stale updates. Finalization is idempotent and performs no external publishing.
+
+Review endpoints:
+
+- `GET /api/v1/review-queue`
+- `POST /api/v1/briefs/{brief_id}/review`
+- `GET /api/v1/briefs/{brief_id}/review`
+- `PATCH /api/v1/briefs/{brief_id}/review/tasks/{task_id}`
+- `POST /api/v1/briefs/{brief_id}/review/finalize`
+
+Set a separate secret in `.env`:
+
+```text
+SCOPEPILOT_REVIEW_KEY=<independent-random-secret>
+```
+
+See [Phase 3A Review Backend](docs/PHASE3A_REVIEW_BACKEND.md) for database details, request examples, revision semantics, and error responses.
+
+## Phase 3B: Lightweight Human Review UI
+
+Start the API and open `http://localhost:8000/review`. Enter `SCOPEPILOT_REVIEW_KEY` to load the review queue, inspect the original brief and AI analysis, edit task copies, record decisions, resolve clarification blocks, and finalize completed reviews. The key remains in browser memory only, client-provided text is rendered safely, and the page loads no external assets.
+
+The interface is implemented with plain HTML, CSS, and JavaScript served by FastAPI—no Node.js, frontend build step, CDN, or extra Docker service. See [Phase 3B Review UI](docs/PHASE3B_REVIEW_UI.md) for usage and security details.
+
+## Phase 4: GitHub Issues Publishing
+
+Finalized reviews can publish their approved tasks to GitHub Issues from the review UI. Publishing is an explicit operator action; pending, rejected, unfinalized, or clarification-blocked tasks are never published. Configure a fine-grained token and its single target repository:
+
+```text
+SCOPEPILOT_GITHUB_TOKEN=<fine-grained-token>
+SCOPEPILOT_GITHUB_REPO=owner/repository
+```
+
+The authenticated endpoint is `POST /api/v1/briefs/{brief_id}/review/publish`. Each task/repository pair is unique in SQLite. A stable task marker supports safe reconciliation after uncertain GitHub responses without blindly creating another issue. See [Phase 4 GitHub Publishing](docs/PHASE4_GITHUB_PUBLISHING.md) for setup and operational details.
+
 ## Automated Tests
 
 Run all tests via pytest in PowerShell:
@@ -294,8 +333,7 @@ Run all tests via pytest in PowerShell:
 .venv\Scripts\python -m pytest
 ```
 
-Test counts:
-- **67 passed, 0 failed** (12 Phase 1 tests + 15 Data Contract & Safeguard tests + 28 State Management & Security tests + 12 Workflow Contract & Regression tests).
+The exact current result is recorded in the latest phase deliverable after running the complete suite.
 
 ## Security Considerations
 

@@ -4,10 +4,13 @@ import json
 from collections.abc import Generator
 from contextlib import asynccontextmanager
 from datetime import datetime, timezone
+from pathlib import Path
 from uuid import UUID, uuid4
 
 from fastapi import Depends, FastAPI, HTTPException, Response, Security, status
+from fastapi.responses import FileResponse
 from fastapi.security import APIKeyHeader
+from fastapi.staticfiles import StaticFiles
 from sqlalchemy import select
 from sqlalchemy.exc import IntegrityError
 from sqlalchemy.orm import Session
@@ -34,9 +37,29 @@ from scopepilot.database import (
     session_dependency,
 )
 from scopepilot.models import Brief
+from scopepilot.github_schemas import ReviewPublishResponse
+from scopepilot.github_service import publish_review
 from scopepilot.schemas import BriefCreate, BriefResponse, HealthResponse
+from scopepilot.review_schemas import (
+    ReviewFinalizeRequest,
+    ReviewQueueResponse,
+    ReviewResponse,
+    ReviewTaskPatch,
+)
+from scopepilot.review_service import (
+    finalize_review,
+    get_review,
+    get_review_queue,
+    initialize_review,
+    update_review_task,
+)
 
-api_key_header = APIKeyHeader(name="X-API-Key", auto_error=False)
+api_key_header = APIKeyHeader(
+    name="X-API-Key", scheme_name="ScopePilotAPIKey", auto_error=False
+)
+review_key_header = APIKeyHeader(
+    name="X-Review-Key", scheme_name="ScopePilotReviewKey", auto_error=False
+)
 
 
 def payload_fingerprint(payload: BriefCreate) -> str:
@@ -74,6 +97,12 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         engine.dispose()
 
     app = FastAPI(title="ScopePilot API", version="0.1.0", lifespan=lifespan)
+    review_ui_dir = Path(__file__).parent / "static" / "review"
+    app.mount(
+        "/review/assets",
+        StaticFiles(directory=review_ui_dir),
+        name="review-assets",
+    )
 
     def require_api_key(provided_key: str | None = Security(api_key_header)) -> None:
         if provided_key is None or not hmac.compare_digest(provided_key, settings.api_key):
@@ -82,12 +111,29 @@ def create_app(settings: Settings | None = None) -> FastAPI:
                 detail="Invalid or missing API key",
             )
 
+    def require_review_key(
+        provided_key: str | None = Security(review_key_header),
+    ) -> None:
+        if (
+            not settings.review_key
+            or provided_key is None
+            or not hmac.compare_digest(provided_key, settings.review_key)
+        ):
+            raise HTTPException(
+                status_code=status.HTTP_401_UNAUTHORIZED,
+                detail="Invalid or missing review key",
+            )
+
     def get_session() -> Generator[Session, None, None]:
         yield from session_dependency(session_factory)
 
     @app.get("/health", response_model=HealthResponse)
     def health() -> HealthResponse:
         return HealthResponse(status="ok")
+
+    @app.get("/review", include_in_schema=False)
+    def review_ui() -> FileResponse:
+        return FileResponse(review_ui_dir / "index.html")
 
     @app.post(
         "/api/v1/briefs",
@@ -192,6 +238,78 @@ def create_app(settings: Settings | None = None) -> FastAPI:
         session: Session = Depends(get_session),
     ) -> AnalysisFailResponse:
         return fail_analysis(session, brief_id, payload)
+
+    @app.get(
+        "/api/v1/review-queue",
+        response_model=ReviewQueueResponse,
+        dependencies=[Depends(require_review_key)],
+    )
+    def get_review_queue_endpoint(
+        session: Session = Depends(get_session),
+    ) -> ReviewQueueResponse:
+        return get_review_queue(session)
+
+    @app.post(
+        "/api/v1/briefs/{brief_id}/review",
+        response_model=ReviewResponse,
+        status_code=status.HTTP_201_CREATED,
+        dependencies=[Depends(require_review_key)],
+    )
+    def initialize_review_endpoint(
+        brief_id: UUID,
+        response: Response,
+        session: Session = Depends(get_session),
+    ) -> ReviewResponse:
+        status_code, review = initialize_review(session, brief_id)
+        response.status_code = status_code
+        return review
+
+    @app.get(
+        "/api/v1/briefs/{brief_id}/review",
+        response_model=ReviewResponse,
+        dependencies=[Depends(require_review_key)],
+    )
+    def get_review_endpoint(
+        brief_id: UUID,
+        session: Session = Depends(get_session),
+    ) -> ReviewResponse:
+        return get_review(session, brief_id)
+
+    @app.patch(
+        "/api/v1/briefs/{brief_id}/review/tasks/{task_id}",
+        response_model=ReviewResponse,
+        dependencies=[Depends(require_review_key)],
+    )
+    def update_review_task_endpoint(
+        brief_id: UUID,
+        task_id: UUID,
+        payload: ReviewTaskPatch,
+        session: Session = Depends(get_session),
+    ) -> ReviewResponse:
+        return update_review_task(session, brief_id, task_id, payload)
+
+    @app.post(
+        "/api/v1/briefs/{brief_id}/review/finalize",
+        response_model=ReviewResponse,
+        dependencies=[Depends(require_review_key)],
+    )
+    def finalize_review_endpoint(
+        brief_id: UUID,
+        payload: ReviewFinalizeRequest,
+        session: Session = Depends(get_session),
+    ) -> ReviewResponse:
+        return finalize_review(session, brief_id, payload)
+
+    @app.post(
+        "/api/v1/briefs/{brief_id}/review/publish",
+        response_model=ReviewPublishResponse,
+        dependencies=[Depends(require_review_key)],
+    )
+    def publish_review_endpoint(
+        brief_id: UUID,
+        session: Session = Depends(get_session),
+    ) -> ReviewPublishResponse:
+        return publish_review(session, brief_id, settings)
 
     app.state.engine = engine
     app.state.session_factory = session_factory

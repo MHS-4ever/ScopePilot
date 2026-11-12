@@ -4,6 +4,9 @@ services:
       context: .
     environment:
       SCOPEPILOT_API_KEY: "${SCOPEPILOT_API_KEY:?Set SCOPEPILOT_API_KEY in .env}"
+      SCOPEPILOT_REVIEW_KEY: "${SCOPEPILOT_REVIEW_KEY:-}"
+      SCOPEPILOT_GITHUB_TOKEN: "${SCOPEPILOT_GITHUB_TOKEN:-}"
+      SCOPEPILOT_GITHUB_REPO: "${SCOPEPILOT_GITHUB_REPO:-}"
       SCOPEPILOT_DATABASE_URL: sqlite:////app/data/scopepilot.db
     ports:
       - "127.0.0.1:8000:8000"

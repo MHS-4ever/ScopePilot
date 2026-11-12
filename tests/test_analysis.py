@@ -751,11 +751,10 @@ def test_34_invented_source_evidence_is_rejected(
     assert resp.status_code == 422
 
 
-def test_35_no_publication_endpoints_exist_in_phase_2(client: TestClient):
-    # Ensure no publish, approve, issues, or github endpoints exist
+def test_35_no_legacy_approval_issue_or_github_endpoints_exist(client: TestClient):
+    # Phase 4 adds an explicit review publish route, but no legacy integrations.
     routes = [route.path for route in client.app.routes]
     for r in routes:
-        assert "/publish" not in r
         assert "/approve" not in r
         assert "/github" not in r
         assert "/issues" not in r

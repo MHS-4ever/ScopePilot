@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <meta name="description" content="ScopePilot human review workspace">
+    <title>ScopePilot Review</title>
+    <link rel="stylesheet" href="/review/assets/styles.css">
+    <script src="/review/assets/app.js" defer></script>
+  </head>
+  <body>
+    <a class="skip-link" href="#review-main">Skip to review workspace</a>
+    <header class="topbar">
+      <div class="brand-lockup">
+        <span class="brand-mark" aria-hidden="true">SP</span>
+        <div>
+          <p class="eyebrow">ScopePilot</p>
+          <h1>Human review workspace</h1>
+        </div>
+      </div>
+      <div id="connection-state" class="connection-state" aria-live="polite">
+        <span class="status-dot" aria-hidden="true"></span>
+        Not connected
+      </div>
+    </header>
+
+    <main id="review-main">
+      <section id="auth-panel" class="auth-panel" aria-labelledby="auth-heading">
+        <div>
+          <p class="eyebrow">Operator access</p>
+          <h2 id="auth-heading">Connect to the review queue</h2>
+          <p class="muted">Your reviewer key stays in this browser tab’s memory and is never saved.</p>
+        </div>
+        <form id="auth-form" class="auth-form">
+          <div class="field grow">
+            <label for="review-key">Reviewer key</label>
+            <input id="review-key" name="review-key" type="password" autocomplete="off" required>
+          </div>
+          <button class="button primary" type="submit">Open workspace</button>
+        </form>
+      </section>
+
+      <div id="app-status" class="app-status" role="status" aria-live="polite" hidden>
+        <span id="app-status-text"></span>
+        <button id="refresh-review" class="text-button" type="button" hidden>Refresh review</button>
+      </div>
+
+      <section id="workspace" class="workspace" hidden>
+        <aside class="queue-panel" aria-labelledby="queue-heading">
+          <div class="panel-heading">
+            <div>
+              <p class="eyebrow">Work queue</p>
+              <h2 id="queue-heading">Analysis drafts</h2>
+            </div>
+            <button id="refresh-queue" class="icon-button" type="button" aria-label="Refresh review queue" title="Refresh queue">↻</button>
+          </div>
+          <p id="queue-summary" class="muted compact"></p>
+          <div id="queue-list" class="queue-list" aria-live="polite"></div>
+        </aside>
+
+        <section id="detail-panel" class="detail-panel" aria-live="polite">
+          <div id="empty-detail" class="empty-state">
+            <span class="empty-icon" aria-hidden="true">✓</span>
+            <h2>Select a brief to begin</h2>
+            <p>Review the original request, compare the AI extraction, and make explicit task decisions.</p>
+          </div>
+          <div id="review-detail" hidden></div>
+        </section>
+      </section>
+    </main>
+  </body>
+</html>
